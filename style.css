@@ -1,0 +1,48 @@
+:root{--bg:#0c1718;--bg2:#13262a;--ink:#d9e6df;--dim:#7f9a93;--amber:#ffb000;--cyan:#5fd7e6;--red:#ff6159;--line:#2a4a4d;--mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,"Courier New",monospace;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#0c1718}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--mono);overflow:hidden;
+background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;background-position:-1px -1px}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,transparent 0,var(--bg) 85%);pointer-events:none}
+body:after{content:"";position:fixed;inset:0;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.12) 2px 3px);pointer-events:none;z-index:9999}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px;background:rgba(12,23,24,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:5000;white-space:nowrap}
+#top b{color:var(--amber);cursor:pointer;background:none;border:0;padding:4px 0}
+#regs{color:var(--cyan);overflow:hidden;text-overflow:ellipsis;font-size:12px}
+#clock{color:var(--dim)}
+#desk{position:absolute;top:calc(48px + env(safe-area-inset-top,0px));left:12px;display:grid;grid-template-columns:repeat(auto-fill,88px);gap:8px;width:calc(100% - 24px);z-index:1}
+.ico{background:none;border:1px solid transparent;border-radius:6px;padding:8px 4px;text-align:center;cursor:pointer;width:88px}
+.ico:hover,.ico.sel{border-color:var(--amber);background:rgba(255,176,0,.08)}
+.ico svg{width:44px;height:44px;display:block;margin:0 auto 4px}
+.ico span{font-size:12px;display:block;overflow-wrap:anywhere}
+.win{position:absolute;display:none;flex-direction:column;background:var(--bg2);border:1px solid var(--amber);border-radius:6px;box-shadow:6px 6px 0 rgba(0,0,0,.45);width:min(560px,94vw);max-height:calc(100% - 60px);z-index:10}
+.wh{display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--line);cursor:grab;user-select:none;touch-action:none;background:rgba(255,176,0,.07)}
+.wh i{width:14px;height:14px;border-radius:50%;background:var(--red);cursor:pointer;border:0;flex:none}
+.wh p{margin:0;color:var(--amber);flex:1;text-align:center;font-size:13px}
+.wb{padding:14px;overflow:auto;flex:1;min-height:0}
+.wb h1{font-size:20px;margin:0 0 8px;color:var(--amber)}
+.wb p{margin:0 0 10px}
+.k{color:var(--cyan)}.c{color:var(--dim)}.a{color:var(--amber)}.s{color:#a8e6a1}
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.btn{background:var(--amber);color:#1a1200;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:700}
+.btn.g{background:none;color:var(--ink);border:1px solid var(--line)}
+textarea{width:100%;height:190px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:8px;font:inherit;resize:vertical}
+#termOut{height:230px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
+#termIn{width:100%;background:none;border:0;color:var(--ink);font:inherit;padding:6px 0;outline:0}
+.pr{color:var(--amber)}
+.proj{border-left:2px solid var(--amber);padding-left:10px;margin-bottom:12px}
+#boot{display:flex;flex-direction:column;position:fixed;inset:0;background:#070e0f;z-index:9000;padding:20px;color:var(--amber);overflow:hidden;cursor:pointer}
+@media (max-width:640px){
+ #desk{grid-template-columns:repeat(3,1fr)}.ico{width:auto}
+ .win{left:2vw!important;top:calc(44px + env(safe-area-inset-top,0px))!important;width:96vw;max-height:calc(100% - 52px)}
+ .wh{cursor:default}#regs{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.blink{animation:b 1s steps(1) infinite}@keyframes b{50%{opacity:0}}
+#boot h2{margin:0 0 12px;letter-spacing:.2em}
+#bar{height:10px;border:1px solid var(--amber);border-radius:2px;margin:16px 0 6px;max-width:420px}
+#fill{height:100%;width:0;background:var(--amber)}

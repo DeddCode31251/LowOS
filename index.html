@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LowOS - Mark Richard</title>
+<meta name="description" content="Mark Richard's personal web OS, built with HTML, CSS and JavaScript.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="boot"><h2 class="a">LowOS</h2><pre id="bootText"></pre><div id="bar"><div id="fill"></div></div><p id="pct" class="c">0%</p><p class="c">tap anywhere to skip</p></div>
+
+<div id="top">
+  <button class="a" id="menu" style="background:none;border:0;cursor:pointer;font-weight:700;color:var(--amber)">LowOS</button>
+  <span id="regs">AX=0 BX=0 CX=0 PC=0</span>
+  <span id="clock"></span>
+</div>
+
+<div id="desk">
+  <button class="ico" data-open="welcome"><svg viewBox="0 0 44 44" fill="none" stroke="#ffb000" stroke-width="2"><rect x="6" y="5" width="32" height="34" rx="3"/><path d="M12 14h20M12 21h14M12 28h18"/></svg><span>readme.asm</span></button>
+  <button class="ico" data-open="term"><svg viewBox="0 0 44 44" fill="none" stroke="#5fd7e6" stroke-width="2"><rect x="4" y="7" width="36" height="30" rx="3"/><path d="M11 17l6 5-6 5M21 28h10"/></svg><span>shell</span></button>
+  <button class="ico" data-open="lab"><svg viewBox="0 0 44 44" fill="none" stroke="#a8e6a1" stroke-width="2"><rect x="11" y="11" width="22" height="22" rx="2"/><path d="M17 5v6M27 5v6M17 33v6M27 33v6M5 17h6M5 27h6M33 17h6M33 27h6"/></svg><span>cpu.lab</span></button>
+  <button class="ico" data-open="proj"><svg viewBox="0 0 44 44" fill="none" stroke="#ff6159" stroke-width="2"><path d="M15 12l-9 10 9 10M29 12l9 10-9 10M25 8l-6 28"/></svg><span>projects.c</span></button>
+</div>
+
+<div class="win" id="welcome" style="top:70px;left:60px">
+  <div class="wh"><i data-close></i><p>readme.asm</p></div>
+  <div class="wb">
+    <h1>Hello, I'm Mark Richard.</h1>
+    <p>This is my personal OS. Every window below the desktop is a small program I wrote in plain HTML, CSS and JavaScript, with a tiny CPU you can program yourself.</p>
+    <pre><span class="c">; who am I</span>
+<span class="k">section</span> .data
+  name   <span class="k">db</span> <span class="s">"Mark Richard"</span>
+  role   <span class="k">db</span> <span class="s">"student developer"</span>
+  loves  <span class="k">db</span> <span class="s">"hardware, low-level code, tea"</span></pre>
+    <div class="row"><button class="btn" data-open="lab">Run some assembly</button><button class="btn g" data-open="term">Open shell</button></div>
+    <p class="c">Tip: drag windows by their title bar. On phones, tap an icon to open it.</p>
+  </div>
+</div>
+
+<div class="win" id="term" style="top:110px;left:120px">
+  <div class="wh"><i data-close></i><p>shell</p></div>
+  <div class="wb">
+    <div id="termOut" aria-live="polite"></div>
+    <label><span class="pr">user@lowos:~$</span> <input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command"></label>
+  </div>
+</div>
+
+<div class="win" id="lab" style="top:90px;left:160px">
+  <div class="wh"><i data-close></i><p>cpu.lab</p></div>
+  <div class="wb">
+    <p class="c">A 4-register toy CPU. Ops: MOV ADD SUB MUL INC DEC CMP JNZ OUT HLT. Labels end with a colon.</p>
+    <textarea id="src" spellcheck="false" aria-label="Assembly source">; sum 1..5 into AX
+  MOV AX, 0
+  MOV CX, 5
+loop:
+  ADD AX, CX
+  DEC CX
+  JNZ loop
+  OUT AX
+  HLT</textarea>
+    <div class="row"><button class="btn" id="run">Run</button><button class="btn g" id="reset">Reset</button></div>
+    <pre id="cpuOut" class="s"></pre>
+  </div>
+</div>
+
+<div class="win" id="proj" style="top:130px;left:200px">
+  <div class="wh"><i data-close></i><p>projects.c</p></div>
+  <div class="wb">
+    <pre><span class="k">typedef struct</span> { <span class="k">char</span> *name; <span class="k">char</span> *stack; } Project;</pre>
+    <br>
+    <div class="proj"><b class="a">Project One</b><br>Replace this with something you built. Say what it does and what you learned.<br><span class="c">stack: C, Arduino</span></div>
+    <div class="proj"><b class="a">Project Two</b><br>A short, honest line about a second project.<br><span class="c">stack: HTML, CSS, JS</span></div>
+    <div class="proj"><b class="a">Project Three</b><br>Even an unfinished experiment counts.<br><span class="c">stack: Python</span></div>
+    <p><a class="k" href="https://github.com/" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
