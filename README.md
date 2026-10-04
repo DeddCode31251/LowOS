@@ -28,8 +28,8 @@ Deadcode
 MIT
 
 # Feature Improvements
-1- Add a Web browser simulator
-2- more apps
-3- Maybe Gallery, TV and weather app
-4- Better UI
-5- Better Loading animation
+- Add a Web browser simulator
+- more apps
+- Maybe Gallery, TV and weather app
+- Better UI
+- Better Loading animation
