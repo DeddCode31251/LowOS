@@ -1,163 +1,233 @@
 (function () {
     "use strict";
 
-    var currentFile = null;
+    const $ = (id) => document.getElementById(id);
 
-    function open(path) {
-        currentFile = path;
+    const DOCUMENTS = "/home/dead/Documents";
 
-        var existing =
-            document.getElementById(
-                "lowos-text-editor"
+    const TextEditor = {
+
+        currentPath: null,
+
+        dirty: false,
+
+        /* open()      -> just show the editor window
+           open(path)  -> load that file */
+        open(path) {
+            if (path === undefined) {
+                openWin("editor");
+                return;
+            }
+
+            if (!this.confirmDiscard()) return;
+
+            const file = FS.find(path);
+
+            if (!file || file.type !== "file") {
+                notify("File not found.", "error");
+                return;
+            }
+
+            this.currentPath = FS.normalize(path);
+
+            $("editorName").value = file.name;
+            $("editorContent").value = file.content || "";
+
+            this.dirty = false;
+            this.updateTitle();
+
+            openWin("editor");
+        },
+
+        newDocument() {
+            if (!this.confirmDiscard()) return;
+
+            this.currentPath = null;
+
+            $("editorName").value = "untitled.txt";
+            $("editorContent").value = "";
+
+            this.dirty = false;
+            this.updateTitle();
+
+            openWin("editor");
+
+            $("editorContent").focus();
+        },
+
+        confirmDiscard() {
+            return (
+                !this.dirty ||
+                confirm("You have unsaved changes. Discard them?")
             );
+        },
 
-        if (existing) {
-            existing.remove();
-        }
+        markDirty() {
+            if (!this.dirty) {
+                this.dirty = true;
+                this.updateTitle();
+            }
+        },
 
-        var content =
-            LowOSFileSystem.readFile(path);
+        updateTitle() {
+            const label = this.currentPath || "Untitled (not saved yet)";
 
-        var win =
-            document.createElement("div");
+            $("editorPath").textContent =
+                label + (this.dirty ? "  *" : "");
+        },
 
-        win.id = "lowos-text-editor";
-        win.className = "lowos-app-window";
+        save() {
+            const name = $("editorName").value.trim();
 
-        win.style.width = "700px";
-        win.style.height = "500px";
-        win.style.left = "50%";
-        win.style.top = "50%";
-        win.style.transform =
-            "translate(-50%, -50%)";
+            if (!this.currentPath) {
+                this.saveAs();
+                return;
+            }
 
-        win.innerHTML = `
-            <div class="lowos-titlebar">
-                <span>Text Editor</span>
+            if (!name) {
+                notify("Filename cannot be empty.", "error");
+                return;
+            }
 
-                <button class="lowos-close-button">
-                    x
-                </button>
-            </div>
+            const content = $("editorContent").value;
 
-            <div class="lowos-editor-toolbar">
-                <span>${path}</span>
-
-                <button id="editor-save">
-                    Save
-                </button>
-            </div>
-
-            <textarea
-                id="editor-textarea"
-                spellcheck="false"
-            ></textarea>
-        `;
-
-        document.body.appendChild(win);
-
-        var textarea =
-            win.querySelector(
-                "#editor-textarea"
-            );
-
-        textarea.value = content;
-
-        win.querySelector(
-            ".lowos-close-button"
-        ).onclick = function () {
-            win.remove();
-        };
-
-        win.querySelector(
-            "#editor-save"
-        ).onclick = function () {
             try {
-                LowOSFileSystem.writeFile(
-                    currentFile,
-                    textarea.value
-                );
+                /* File was deleted while open: recreate it where it was. */
+                if (!FS.exists(this.currentPath)) {
+                    FS.create(this.currentPath, "file", content);
+                }
 
-                alert("Saved.");
+                const oldName = FS.name(this.currentPath);
+
+                if (name !== oldName) {
+                    FS.rename(this.currentPath, name);
+
+                    this.currentPath = FS.join(
+                        FS.parent(this.currentPath),
+                        name
+                    );
+                }
+
+                FS.write(this.currentPath, content);
+
+                this.dirty = false;
+                this.updateTitle();
+
+                refreshLowOS();
+
+                notify("Saved.");
+
             } catch (error) {
-                alert(error.message);
+                notify(error.message, "error");
             }
+        },
+
+        saveAs() {
+            const name = $("editorName").value.trim();
+
+            if (!name) {
+                notify("Enter a filename.", "error");
+                return;
+            }
+
+            const content = $("editorContent").value;
+
+            /* "dir/name" saves there; a bare name goes to Documents. */
+            const path = name.includes("/")
+                ? FS.normalize(name)
+                : FS.join(DOCUMENTS, name);
+
+            try {
+                if (FS.exists(path)) {
+                    if (FS.find(path).type !== "file") {
+                        throw new Error("That name is a folder");
+                    }
+
+                    if (!confirm("File exists. Overwrite?")) return;
+
+                    FS.write(path, content);
+                } else {
+                    FS.create(path, "file", content);
+                }
+
+                this.currentPath = path;
+
+                $("editorName").value = FS.name(path);
+
+                this.dirty = false;
+                this.updateTitle();
+
+                refreshLowOS();
+
+                notify("Saved to " + FS.parent(path));
+
+            } catch (error) {
+                notify(error.message, "error");
+            }
+        },
+
+        /* Send the buffer to the CPU lab. */
+        runAsm() {
+            if (!window.Lab) return;
+
+            window.Lab.load($("editorContent").value);
+            window.Lab.run();
+        }
+    };
+
+    function notify(message, kind) {
+        if (typeof window.toast === "function") {
+            window.toast(message, kind);
+        } else {
+            alert(message);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const on = (id, event, handler) => {
+            const element = $(id);
+
+            if (element) element.addEventListener(event, handler);
         };
 
-        makeDraggable(win);
-    }
+        on("editorSave", "click", () => TextEditor.save());
+        on("editorSaveAs", "click", () => TextEditor.saveAs());
+        on("editorNew", "click", () => TextEditor.newDocument());
+        on("editorRun", "click", () => TextEditor.runAsm());
 
-    function makeDraggable(element) {
-        var title =
-            element.querySelector(
-                ".lowos-titlebar"
-            );
+        on("editorName", "input", () => TextEditor.markDirty());
+        on("editorContent", "input", () => TextEditor.markDirty());
 
-        var active = false;
-        var x = 0;
-        var y = 0;
+        on("editorContent", "keydown", (event) => {
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key.toLowerCase() === "s"
+            ) {
+                event.preventDefault();
+                TextEditor.save();
+                return;
+            }
 
-        title.addEventListener(
-            "pointerdown",
-            function (event) {
-                if (
-                    event.target.classList.contains(
-                        "lowos-close-button"
-                    )
-                ) {
-                    return;
-                }
+            if (event.key === "Tab" && !event.shiftKey) {
+                event.preventDefault();
 
-                active = true;
+                const area = event.target;
 
-                var rect =
-                    element.getBoundingClientRect();
-
-                x =
-                    event.clientX -
-                    rect.left;
-
-                y =
-                    event.clientY -
-                    rect.top;
-
-                element.style.transform =
-                    "none";
-
-                title.setPointerCapture(
-                    event.pointerId
+                area.setRangeText(
+                    "    ",
+                    area.selectionStart,
+                    area.selectionEnd,
+                    "end"
                 );
+
+                TextEditor.markDirty();
             }
-        );
+        });
 
-        title.addEventListener(
-            "pointermove",
-            function (event) {
-                if (!active) {
-                    return;
-                }
+        TextEditor.updateTitle();
+        $("editorPath").textContent = "No file selected";
+    });
 
-                element.style.left =
-                    event.clientX -
-                    x +
-                    "px";
+    window.TextEditor = TextEditor;
 
-                element.style.top =
-                    event.clientY -
-                    y +
-                    "px";
-            }
-        );
-
-        title.addEventListener(
-            "pointerup",
-            function () {
-                active = false;
-            }
-        );
-    }
-
-    window.LowOSTextEditor = {
-        open: open
-    };
 })();

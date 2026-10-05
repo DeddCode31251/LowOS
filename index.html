@@ -1,90 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover"
-    >
-    <title>LowOS</title>
-    <meta
-        name="description"
-        content="LowOS - a web-based operating system simulator."
-    >
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LowOS</title>
+<meta name="description" content="LowOS - browser based operating system simulator">
+<meta name="theme-color" content="#0c1718">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230c1718'/%3E%3Ctext x='3' y='12' font-size='11' font-family='monospace' fill='%23ffb000'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="boot">
-    <h2>LowOS</h2>
+<noscript>
+    <p style="position:fixed;inset:0;z-index:99999;background:#070e0f;color:#ffb000;padding:20px;margin:0">
+        LowOS needs JavaScript to run.
+    </p>
+</noscript>
 
+<div id="boot">
+    <h2 class="a">LowOS</h2>
     <pre id="bootText"></pre>
 
     <div id="bar">
         <div id="fill"></div>
     </div>
 
-    <p id="pct">0%</p>
-    <p>click anywhere to skip</p>
+    <p id="pct" class="c">0%</p>
+    <p class="c">click anywhere to skip</p>
 </div>
 
-<header id="top">
-    <button id="menu">LowOS</button>
+<div id="top">
+    <button id="menu" class="top-brand">LowOS</button>
 
     <span id="regs">
         AX=0 BX=0 CX=0 DX=0 PC=0 ZF=0
     </span>
 
     <span id="clock"></span>
-</header>
+</div>
 
-<main id="desk">
+<main id="desktop">
 
-    <button class="ico" data-open="welcome">
-        <div class="icon-symbol">ASM</div>
-        <span>readme.asm</span>
-    </button>
+    <section class="desktop-zone zone-apps" id="appsZone">
+        <div class="zone-title">APPLICATIONS</div>
 
-    <button class="ico" data-open="term">
-        <div class="icon-symbol terminal-icon">&gt;_</div>
-        <span>shell</span>
-    </button>
+        <div class="desktop-grid" id="appsGrid">
 
-    <button class="ico" data-open="lab">
-        <div class="icon-symbol cpu-icon">CPU</div>
-        <span>cpu.lab</span>
-    </button>
+            <button class="ico" data-open="welcome">
+                <div class="icon asm">ASM</div>
+                <span>readme.asm</span>
+            </button>
 
-    <button class="ico" data-open="proj">
-        <div class="icon-symbol code-icon">&lt;/&gt;</div>
-        <span>projects</span>
-    </button>
+            <button class="ico" data-open="term">
+                <div class="icon shell">&gt;_</div>
+                <span>shell</span>
+            </button>
 
-    <button class="ico" onclick="openFileManager()">
-        <div class="icon-symbol folder-icon">DIR</div>
-        <span>files</span>
-    </button>
+            <button class="ico" data-open="lab">
+                <div class="icon cpu">CPU</div>
+                <span>cpu.lab</span>
+            </button>
 
-    <button class="ico" onclick="openTextEditor()">
-        <div class="icon-symbol editor-icon">TXT</div>
-        <span>editor</span>
-    </button>
+            <button class="ico" data-open="proj">
+                <div class="icon code">&lt;/&gt;</div>
+                <span>projects.c</span>
+            </button>
 
-    <button class="ico" onclick="openCalculator()">
-        <div class="icon-symbol calc-icon">123</div>
-        <span>calculator</span>
-    </button>
+            <button class="ico" data-open="files">
+                <div class="icon file">DIR</div>
+                <span>filemgr</span>
+            </button>
 
-    <button class="ico" onclick="openBrowser()">
-        <div class="icon-symbol browser-icon">WEB</div>
-        <span>browser</span>
-    </button>
+            <button class="ico" data-open="editor">
+                <div class="icon text">TXT</div>
+                <span>editor</span>
+            </button>
+
+            <button class="ico" data-open="calculator">
+                <div class="icon calc">CALC</div>
+                <span>calculator</span>
+            </button>
+
+            <button class="ico" data-open="browser">
+                <div class="icon web">WEB</div>
+                <span>browser</span>
+            </button>
+
+            <button class="ico" data-open="trash">
+                <div class="icon trash">TRASH</div>
+                <span>trash</span>
+            </button>
+
+        </div>
+    </section>
+
+    <section class="desktop-zone" id="filesZone">
+        <div class="zone-title">DESKTOP FILES</div>
+        <div class="desktop-grid" id="filesGrid"></div>
+    </section>
+
+    <section class="desktop-zone" id="workspaceZone">
+        <div class="zone-title">WORKSPACE</div>
+        <div class="desktop-grid" id="workspaceGrid"></div>
+    </section>
+
+    <section class="desktop-zone" id="systemZone">
+        <div class="zone-title">SYSTEM</div>
+        <div class="desktop-grid" id="systemGrid"></div>
+    </section>
 
 </main>
 
-<section class="win" id="welcome" style="top:70px;left:60px">
+<!-- README -->
 
+<div class="win" id="welcome" style="top:70px;left:60px">
     <div class="wh">
         <i data-close></i>
         <p>readme.asm</p>
@@ -92,19 +122,22 @@
 
     <div class="wb">
 
-        <h1>Welcome to LowOS</h1>
+        <h1>Hello, welcome to LowOS.</h1>
 
         <p>
-            LowOS is a browser-based operating system simulator
-            built with HTML, CSS and JavaScript.
+            LowOS is a browser-based operating system simulator built
+            with HTML, CSS and JavaScript.
         </p>
 
-        <pre><span class="c">; LowOS</span>
-<span class="k">section</span> .data
+        <pre>
+<span class="c">; LowOS system information</span>
 
-    name   <span class="k">db</span> <span class="s">"LowOS"</span>
-    type   <span class="k">db</span> <span class="s">"web operating system"</span>
-    stack  <span class="k">db</span> <span class="s">"HTML CSS JavaScript"</span></pre>
+<span class="k">system</span>  <span class="s">"LowOS"</span>
+<span class="k">kernel</span>  <span class="s">"JavaScript"</span>
+<span class="k">shell</span>   <span class="s">"LowOS Shell"</span>
+<span class="k">cpu</span>     <span class="s">"4 register toy CPU"</span>
+<span class="k">storage</span> <span class="s">"Virtual localStorage filesystem"</span>
+        </pre>
 
         <div class="row">
             <button class="btn" data-open="lab">
@@ -114,34 +147,30 @@
             <button class="btn g" data-open="term">
                 Open Shell
             </button>
-
-            <button class="btn g" onclick="openFileManager()">
-                Open Files
-            </button>
         </div>
 
         <p class="c">
-            Drag windows by their title bar.
+            Drag windows using their title bars.
+            Double-click desktop files to open them.
         </p>
 
     </div>
+</div>
 
-</section>
+<!-- TERMINAL -->
 
-<section class="win" id="term" style="top:110px;left:120px">
-
+<div class="win" id="term" style="top:110px;left:120px">
     <div class="wh">
         <i data-close></i>
         <p>shell</p>
     </div>
 
-    <div class="wb">
+    <div class="wb terminal-window">
 
-        <div id="termOut"></div>
+        <div id="termOut" aria-live="polite"></div>
 
         <label class="terminal-input">
-            <span class="pr">user@2bytes:~$</span>
-
+            <span class="pr">user@lowos:~$</span>
             <input
                 id="termIn"
                 autocomplete="off"
@@ -152,11 +181,11 @@
         </label>
 
     </div>
+</div>
 
-</section>
+<!-- CPU -->
 
-<section class="win" id="lab" style="top:90px;left:160px">
-
+<div class="win" id="lab" style="top:90px;left:160px">
     <div class="wh">
         <i data-close></i>
         <p>cpu.lab</p>
@@ -165,23 +194,26 @@
     <div class="wb">
 
         <p class="c">
-            4-register toy CPU.
-            Ops: MOV ADD SUB MUL INC DEC CMP JNZ OUT HLT.
+            A 4-register toy CPU.
+            Ops:
+            MOV ADD SUB MUL DIV INC DEC CMP JMP JZ JNZ JL JG OUT HLT.
+            Registers: AX BX CX DX (32-bit). Press Ctrl+Enter to run.
         </p>
 
-        <textarea
-            id="src"
-            spellcheck="false"
-            aria-label="Assembly source"
-        >; sum 1..5 into AX
+        <textarea id="src" spellcheck="false">
+; sum 1..5 into AX
+
 MOV AX, 0
 MOV CX, 5
+
 loop:
 ADD AX, CX
 DEC CX
 JNZ loop
+
 OUT AX
-HLT</textarea>
+HLT
+        </textarea>
 
         <div class="row">
             <button class="btn" id="run">
@@ -196,47 +228,49 @@ HLT</textarea>
         <pre id="cpuOut" class="s"></pre>
 
     </div>
+</div>
 
-</section>
+<!-- PROJECTS -->
 
-<section class="win" id="proj" style="top:130px;left:200px">
-
+<div class="win" id="proj" style="top:130px;left:200px">
     <div class="wh">
         <i data-close></i>
-        <p>projects</p>
+        <p>projects.c</p>
     </div>
 
     <div class="wb">
 
-        <pre><span class="k">typedef struct</span> {
+<pre>
+<span class="k">typedef struct</span> {
     <span class="k">char</span> *name;
     <span class="k">char</span> *stack;
-} Project;</pre>
+} Project;
+</pre>
 
         <br>
 
         <div class="proj">
-            <b class="a">DeadIV OS</b>
+            <b class="a">Project One</b>
             <br>
-            A low-level operating system project.
+            Created an actual OS named DeadIV OS
             <br>
-            <span class="c">C, Assembly</span>
+            <span class="c">stack: C, Assembly</span>
         </div>
 
         <div class="proj">
-            <b class="a">Slack Bot</b>
+            <b class="a">Project Two</b>
             <br>
-            A Slack bot project.
+            Slack Bot for StarDance Summer Competition
             <br>
-            <span class="c">HTML, CSS, JavaScript</span>
+            <span class="c">stack: HTML, CSS, JavaScript</span>
         </div>
 
         <div class="proj">
-            <b class="a">DEADHASH</b>
+            <b class="a">Project Three</b>
             <br>
-            A hashing algorithm project.
+            DEADHASH hashing algorithm
             <br>
-            <span class="c">C</span>
+            <span class="c">stack: C</span>
         </div>
 
         <p>
@@ -251,15 +285,271 @@ HLT</textarea>
         </p>
 
     </div>
+</div>
 
-</section>
+<!-- FILE MANAGER -->
 
-<script src="scripts/filesystem.js"></script>
-<script src="scripts/texteditor.js"></script>
-<script src="scripts/filemanager.js"></script>
-<script src="scripts/calculator.js"></script>
-<script src="scripts/browser.js"></script>
-<script src="script.js"></script>
+<div class="win large" id="files" style="top:60px;left:80px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>filemgr</p>
+    </div>
+
+    <div class="wb">
+
+        <div class="file-toolbar">
+
+            <button class="btn g" id="fileBack">
+                ..
+            </button>
+
+            <button class="btn" id="newFile">
+                New File
+            </button>
+
+            <button class="btn g" id="newFolder">
+                New Folder
+            </button>
+
+            <button class="btn g" id="fileRename">
+                Rename
+            </button>
+
+            <button class="btn g" id="fileDelete">
+                Delete
+            </button>
+
+            <button class="btn g" id="fileCopy">
+                Copy
+            </button>
+
+            <button class="btn g" id="fileCut">
+                Cut
+            </button>
+
+            <button class="btn g" id="filePaste">
+                Paste
+            </button>
+
+            <button class="btn g" id="fileRefresh">
+                Refresh
+            </button>
+
+        </div>
+
+        <div class="path-bar">
+            <span>PATH:</span>
+            <span id="filePath">/home/dead/Desktop</span>
+        </div>
+
+        <div id="fileList" class="file-list"></div>
+
+    </div>
+</div>
+
+<!-- EDITOR -->
+
+<div class="win large" id="editor" style="top:70px;left:110px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>editor</p>
+    </div>
+
+    <div class="wb">
+
+        <div class="editor-toolbar">
+
+            <span id="editorPath">
+                No file selected
+            </span>
+
+            <button class="btn g" id="editorNew">
+                New
+            </button>
+
+            <button class="btn" id="editorSave">
+                Save
+            </button>
+
+            <button class="btn g" id="editorSaveAs">
+                Save As
+            </button>
+
+            <button class="btn g" id="editorRun" title="Run this text in the CPU lab">
+                Run ASM
+            </button>
+
+        </div>
+
+        <input
+            id="editorName"
+            class="editor-name"
+            placeholder="filename.ext"
+        >
+
+        <textarea
+            id="editorContent"
+            class="code-editor"
+            spellcheck="false"
+        ></textarea>
+
+    </div>
+</div>
+
+<!-- CALCULATOR -->
+
+<div class="win calculator-window" id="calculator" style="top:100px;left:260px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>calculator</p>
+    </div>
+
+    <div class="wb">
+
+        <input
+            id="calcDisplay"
+            class="calc-display"
+            value="0"
+            readonly
+        >
+
+        <div class="calc-grid">
+
+            <button data-calc="C">C</button>
+            <button data-calc="BACK" aria-label="Backspace">&#9003;</button>
+            <button data-calc="/">/</button>
+            <button data-calc="*">*</button>
+
+            <button data-calc="7">7</button>
+            <button data-calc="8">8</button>
+            <button data-calc="9">9</button>
+            <button data-calc="-">-</button>
+
+            <button data-calc="4">4</button>
+            <button data-calc="5">5</button>
+            <button data-calc="6">6</button>
+            <button data-calc="+">+</button>
+
+            <button data-calc="1">1</button>
+            <button data-calc="2">2</button>
+            <button data-calc="3">3</button>
+            <button data-calc="(">(</button>
+
+            <button data-calc="0">0</button>
+            <button data-calc=".">.</button>
+            <button data-calc=")">)</button>
+            <button data-calc="=" class="equals">=</button>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- BROWSER -->
+
+<div class="win browser-window" id="browser" style="top:55px;left:70px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>browser</p>
+    </div>
+
+    <div class="browser-body">
+
+        <div class="browser-toolbar">
+
+            <button id="browserBack">←</button>
+            <button id="browserForward">→</button>
+            <button id="browserReload">↻</button>
+
+            <input
+                id="browserAddress"
+                value="https://example.com"
+                aria-label="Address"
+                spellcheck="false"
+            >
+
+            <button id="browserGo">
+                GO
+            </button>
+
+            <button id="browserExternal">
+                External
+            </button>
+
+        </div>
+
+        <div class="browser-info">
+            Embedded pages may block iframe loading.
+            Use External to open the page in your normal browser.
+        </div>
+
+        <iframe
+            id="browserFrame"
+            title="LowOS Browser"
+            src="about:blank"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            referrerpolicy="no-referrer"
+        ></iframe>
+
+    </div>
+</div>
+
+<!-- TRASH -->
+
+<div class="win large" id="trash" style="top:80px;left:150px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>trash</p>
+    </div>
+
+    <div class="wb">
+
+        <div class="file-toolbar">
+
+            <button class="btn g" id="trashRefresh">
+                Refresh
+            </button>
+
+            <button class="btn g" id="trashEmpty">
+                Empty Trash
+            </button>
+
+        </div>
+
+        <div id="trashList" class="trash-list"></div>
+
+    </div>
+</div>
+
+<!-- CONTEXT MENU -->
+
+<div id="contextMenu" class="context-menu hidden">
+
+    <button id="contextOpen" class="item-only">Open</button>
+    <button id="contextRename" class="item-only">Rename</button>
+    <button id="contextDelete" class="item-only">Move to Trash</button>
+
+    <div class="menu-sep item-only"></div>
+
+    <button id="contextNewFile">New File</button>
+    <button id="contextNewFolder">New Folder</button>
+    <button id="contextRefresh">Refresh</button>
+
+</div>
+
+<script defer src="scripts/filesystem.js"></script>
+<script defer src="scripts/cpu.js"></script>
+<script defer src="scripts/filemanager.js"></script>
+<script defer src="scripts/texteditor.js"></script>
+<script defer src="scripts/calculator.js"></script>
+<script defer src="scripts/browser.js"></script>
+<script defer src="scripts/terminal.js"></script>
+<script defer src="script.js"></script>
 
 </body>
 </html>

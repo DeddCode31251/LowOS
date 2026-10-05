@@ -1,250 +1,245 @@
 (function () {
     "use strict";
 
-    var expression = "";
+    /* Recursive-descent parser: no eval / Function, so nothing can be injected.
+       expr   = term (("+" | "-") term)*
+       term   = unary (("*" | "/") unary)*
+       unary  = ("-" | "+") unary | primary
+       primary= number | "(" expr ")"                                        */
 
-    function open() {
-        var existing =
-            document.getElementById(
-                "lowos-calculator"
-            );
+    function tokenize(text) {
+        const source = text.replace(/\s+/g, "");
+        const tokens = [];
 
-        if (existing) {
-            return;
+        let i = 0;
+
+        while (i < source.length) {
+            const number = source.slice(i).match(/^(\d+\.?\d*|\.\d+)/);
+
+            if (number) {
+                tokens.push(parseFloat(number[0]));
+                i += number[0].length;
+                continue;
+            }
+
+            if ("+-*/()".includes(source[i])) {
+                tokens.push(source[i]);
+                i++;
+                continue;
+            }
+
+            throw new Error("Invalid character");
         }
 
-        var win =
-            document.createElement("div");
+        return tokens;
+    }
 
-        win.id = "lowos-calculator";
-        win.className =
-            "lowos-app-window calculator-window";
+    function evaluate(text) {
+        const tokens = tokenize(text);
 
-        win.style.left = "50%";
-        win.style.top = "50%";
-        win.style.transform =
-            "translate(-50%, -50%)";
+        let position = 0;
 
-        win.innerHTML = `
-            <div class="lowos-titlebar">
-                <span>Calculator</span>
+        const peek = () => tokens[position];
+        const take = () => tokens[position++];
 
-                <button class="lowos-close-button">
-                    x
-                </button>
-            </div>
+        function expression() {
+            let value = term();
 
-            <div class="calculator-display">
-                0
-            </div>
+            while (peek() === "+" || peek() === "-") {
+                const op = take();
+                const right = term();
 
-            <div class="calculator-buttons">
+                value = op === "+" ? value + right : value - right;
+            }
 
-                <button data-action="clear">
-                    C
-                </button>
+            return value;
+        }
 
-                <button data-value="(">
-                    (
-                </button>
+        function term() {
+            let value = unary();
 
-                <button data-value=")">
-                    )
-                </button>
+            while (peek() === "*" || peek() === "/") {
+                const op = take();
+                const right = unary();
 
-                <button data-value="/">
-                    /
-                </button>
+                if (op === "/" && right === 0) {
+                    throw new Error("Division by zero");
+                }
 
-                <button data-value="7">7</button>
-                <button data-value="8">8</button>
-                <button data-value="9">9</button>
-                <button data-value="*">*</button>
+                value = op === "*" ? value * right : value / right;
+            }
 
-                <button data-value="4">4</button>
-                <button data-value="5">5</button>
-                <button data-value="6">6</button>
-                <button data-value="-">-</button>
+            return value;
+        }
 
-                <button data-value="1">1</button>
-                <button data-value="2">2</button>
-                <button data-value="3">3</button>
-                <button data-value="+">+</button>
+        function unary() {
+            if (peek() === "-") {
+                take();
+                return -unary();
+            }
 
-                <button data-value="0">0</button>
-                <button data-value=".">.</button>
+            if (peek() === "+") {
+                take();
+                return unary();
+            }
 
-                <button data-action="backspace">
-                    DEL
-                </button>
+            return primary();
+        }
 
-                <button data-action="equals">
-                    =
-                </button>
+        function primary() {
+            const token = take();
 
-            </div>
-        `;
+            if (typeof token === "number") return token;
 
-        document.body.appendChild(win);
+            if (token === "(") {
+                const value = expression();
 
-        var display =
-            win.querySelector(
-                ".calculator-display"
+                if (take() !== ")") {
+                    throw new Error("Missing )");
+                }
+
+                return value;
+            }
+
+            throw new Error("Unexpected token");
+        }
+
+        if (!tokens.length) return 0;
+
+        const result = expression();
+
+        if (position !== tokens.length) {
+            throw new Error("Unexpected token");
+        }
+
+        if (!Number.isFinite(result)) {
+            throw new Error("Invalid result");
+        }
+
+        /* hides float noise: 0.1 + 0.2 -> 0.3 */
+        return parseFloat(result.toPrecision(12));
+    }
+
+    const Calculator = {
+
+        expression: "",
+
+        justEvaluated: false,
+
+        evaluate,
+
+        open() {
+            openWin("calculator");
+
+            this.expression = "";
+            this.justEvaluated = false;
+
+            this.update();
+        },
+
+        update() {
+            const display = document.getElementById("calcDisplay");
+
+            if (!display) return;
+
+            display.value = this.expression || "0";
+        },
+
+        press(value) {
+            if (this.expression === "Error") {
+                this.expression = "";
+            }
+
+            if (value === "C") {
+                this.expression = "";
+                this.justEvaluated = false;
+                this.update();
+                return;
+            }
+
+            if (value === "BACK") {
+                this.expression = this.expression.slice(0, -1);
+                this.justEvaluated = false;
+                this.update();
+                return;
+            }
+
+            if (value === "=") {
+                if (!this.expression) return;
+
+                try {
+                    this.expression = String(evaluate(this.expression));
+                    this.justEvaluated = true;
+                } catch (error) {
+                    this.expression = "Error";
+                    this.justEvaluated = false;
+                }
+
+                this.update();
+                return;
+            }
+
+            /* After "=", typing a digit starts fresh; an operator continues. */
+            if (this.justEvaluated && /[\d.(]/.test(value)) {
+                this.expression = "";
+            }
+
+            this.justEvaluated = false;
+
+            this.expression += value;
+
+            this.update();
+        },
+
+        handleKey(event) {
+            const win = document.getElementById("calculator");
+
+            if (!win || !win.classList.contains("open")) return;
+
+            const target = event.target;
+
+            /* Don't hijack typing in other windows' inputs. */
+            if (
+                target.matches &&
+                target.matches("input, textarea") &&
+                target.id !== "calcDisplay"
+            ) {
+                return;
+            }
+
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+            if (/^[0-9+\-*/().]$/.test(event.key)) {
+                event.preventDefault();
+                this.press(event.key);
+            } else if (event.key === "Enter" || event.key === "=") {
+                event.preventDefault();
+                this.press("=");
+            } else if (event.key === "Backspace") {
+                event.preventDefault();
+                this.press("BACK");
+            } else if (event.key === "Escape" || event.key === "Delete") {
+                this.press("C");
+            }
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("[data-calc]").forEach((button) => {
+            button.addEventListener("click", () =>
+                Calculator.press(button.dataset.calc)
             );
-
-        win.querySelector(
-            ".lowos-close-button"
-        ).onclick = function () {
-            win.remove();
-        };
-
-        win.querySelectorAll(
-            "[data-value]"
-        ).forEach(function (button) {
-            button.onclick = function () {
-                expression +=
-                    button.dataset.value;
-
-                display.textContent =
-                    expression;
-            };
         });
 
-        win.querySelector(
-            '[data-action="clear"]'
-        ).onclick = function () {
-            expression = "";
-            display.textContent = "0";
-        };
+        const win = document.getElementById("calculator");
 
-        win.querySelector(
-            '[data-action="backspace"]'
-        ).onclick = function () {
-            expression =
-                expression.slice(0, -1);
-
-            display.textContent =
-                expression || "0";
-        };
-
-        win.querySelector(
-            '[data-action="equals"]'
-        ).onclick = function () {
-            calculate(display);
-        };
-
-        makeDraggable(win);
-    }
-
-    function calculate(display) {
-        if (!expression) {
-            return;
-        }
-
-        try {
-            if (
-                !/^[0-9+\-*/().\s]+$/.test(
-                    expression
-                )
-            ) {
-                throw new Error();
-            }
-
-            var result =
-                Function(
-                    '"use strict"; return (' +
-                    expression +
-                    ")"
-                )();
-
-            if (
-                typeof result !== "number" ||
-                !Number.isFinite(result)
-            ) {
-                throw new Error();
-            }
-
-            expression = String(result);
-
-            display.textContent =
-                expression;
-        } catch (error) {
-            expression = "";
-            display.textContent = "Error";
-        }
-    }
-
-    function makeDraggable(element) {
-        var title =
-            element.querySelector(
-                ".lowos-titlebar"
+        if (win) {
+            win.addEventListener("keydown", (event) =>
+                Calculator.handleKey(event)
             );
+        }
+    });
 
-        var active = false;
-        var x = 0;
-        var y = 0;
+    window.Calculator = Calculator;
 
-        title.addEventListener(
-            "pointerdown",
-            function (event) {
-                if (
-                    event.target.classList.contains(
-                        "lowos-close-button"
-                    )
-                ) {
-                    return;
-                }
-
-                active = true;
-
-                var rect =
-                    element.getBoundingClientRect();
-
-                x =
-                    event.clientX -
-                    rect.left;
-
-                y =
-                    event.clientY -
-                    rect.top;
-
-                element.style.transform =
-                    "none";
-
-                title.setPointerCapture(
-                    event.pointerId
-                );
-            }
-        );
-
-        title.addEventListener(
-            "pointermove",
-            function (event) {
-                if (!active) {
-                    return;
-                }
-
-                element.style.left =
-                    event.clientX -
-                    x +
-                    "px";
-
-                element.style.top =
-                    event.clientY -
-                    y +
-                    "px";
-            }
-        );
-
-        title.addEventListener(
-            "pointerup",
-            function () {
-                active = false;
-            }
-        );
-    }
-
-    window.LowOSCalculator = {
-        open: open
-    };
 })();

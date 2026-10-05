@@ -1,493 +1,365 @@
 (function () {
     "use strict";
 
-    var currentPath = "/home/dead";
+    const FileManager = {
 
-    function icon(item) {
-        if (item.type === "directory") {
-            return "DIR";
-        }
+        currentPath: "/home/dead/Desktop",
 
-        if (item.name.endsWith(".txt")) {
-            return "TXT";
-        }
+        selectedPath: null,
 
-        if (item.name.endsWith(".js")) {
-            return "JS";
-        }
+        clipboard: null, /* { path, mode: "copy" | "cut" } */
 
-        if (item.name.endsWith(".html")) {
-            return "HTML";
-        }
+        open(path) {
+            if (path) {
+                const node = FS.find(path);
 
-        return "FILE";
-    }
+                if (!node || node.type !== "directory") {
+                    notify("Folder not found.", "error");
+                    return;
+                }
 
-    function open() {
-        var existing =
-            document.getElementById(
-                "lowos-file-manager"
-            );
-
-        if (existing) {
-            existing.remove();
-        }
-
-        var win =
-            document.createElement("div");
-
-        win.id = "lowos-file-manager";
-        win.className = "lowos-app-window";
-
-        win.style.width = "720px";
-        win.style.height = "500px";
-        win.style.left = "50%";
-        win.style.top = "50%";
-        win.style.transform =
-            "translate(-50%, -50%)";
-
-        win.innerHTML = `
-            <div class="lowos-titlebar">
-                <span>File Manager</span>
-                <button class="lowos-close-button">x</button>
-            </div>
-
-            <div class="lowos-toolbar">
-                <button id="fm-back">Back</button>
-                <button id="fm-up">Up</button>
-                <button id="fm-home">Home</button>
-
-                <input id="fm-path">
-
-                <button id="fm-go">Go</button>
-            </div>
-
-            <div class="lowos-file-actions">
-                <button id="fm-new-folder">
-                    New Folder
-                </button>
-
-                <button id="fm-new-file">
-                    New File
-                </button>
-
-                <button id="fm-refresh">
-                    Refresh
-                </button>
-            </div>
-
-            <div
-                id="fm-content"
-                class="lowos-file-grid"
-            ></div>
-        `;
-
-        document.body.appendChild(win);
-
-        makeDraggable(win);
-
-        win.querySelector(
-            ".lowos-close-button"
-        ).onclick = function () {
-            win.remove();
-        };
-
-        document.getElementById(
-            "fm-back"
-        ).onclick = function () {
-            navigate(
-                LowOSFileSystem.normalizePath(
-                    currentPath + "/.."
-                )
-            );
-        };
-
-        document.getElementById(
-            "fm-up"
-        ).onclick = function () {
-            navigate(
-                LowOSFileSystem.normalizePath(
-                    currentPath + "/.."
-                )
-            );
-        };
-
-        document.getElementById(
-            "fm-home"
-        ).onclick = function () {
-            navigate("/home/dead");
-        };
-
-        document.getElementById(
-            "fm-go"
-        ).onclick = function () {
-            navigate(
-                document.getElementById(
-                    "fm-path"
-                ).value
-            );
-        };
-
-        document.getElementById(
-            "fm-refresh"
-        ).onclick = render;
-
-        document.getElementById(
-            "fm-new-folder"
-        ).onclick = createFolder;
-
-        document.getElementById(
-            "fm-new-file"
-        ).onclick = createFile;
-
-        render();
-    }
-
-    function navigate(path) {
-        path =
-            LowOSFileSystem.normalizePath(path);
-
-        var node =
-            LowOSFileSystem.findNode(path);
-
-        if (
-            !node ||
-            node.type !== "directory"
-        ) {
-            alert("Directory not found.");
-            return;
-        }
-
-        currentPath = path;
-
-        render();
-    }
-
-    function render() {
-        var content =
-            document.getElementById(
-                "fm-content"
-            );
-
-        var path =
-            document.getElementById(
-                "fm-path"
-            );
-
-        if (!content || !path) {
-            return;
-        }
-
-        path.value = currentPath;
-
-        var items =
-            LowOSFileSystem.listDirectory(
-                currentPath
-            );
-
-        content.innerHTML = "";
-
-        if (items.length === 0) {
-            content.innerHTML =
-                '<div class="lowos-empty-folder">Directory is empty.</div>';
-
-            return;
-        }
-
-        items.forEach(function (item) {
-            var element =
-                document.createElement("div");
-
-            element.className =
-                "lowos-file-item";
-
-            element.innerHTML =
-                '<div class="lowos-file-icon">' +
-                icon(item) +
-                "</div>" +
-                '<div class="lowos-file-name">' +
-                escapeHtml(item.name) +
-                "</div>";
-
-            element.ondblclick =
-                function () {
-                    var path =
-                        currentPath +
-                        "/" +
-                        item.name;
-
-                    if (
-                        item.type ===
-                        "directory"
-                    ) {
-                        navigate(path);
-                    } else {
-                        openFile(path);
-                    }
-                };
-
-            element.oncontextmenu =
-                function (event) {
-                    event.preventDefault();
-
-                    contextMenu(
-                        event.clientX,
-                        event.clientY,
-                        item
-                    );
-                };
-
-            content.appendChild(element);
-        });
-    }
-
-    function escapeHtml(value) {
-        var div =
-            document.createElement("div");
-
-        div.textContent = value;
-
-        return div.innerHTML;
-    }
-
-    function openFile(path) {
-        var file =
-            LowOSFileSystem.findNode(path);
-
-        if (!file) {
-            return;
-        }
-
-        if (
-            file.name.endsWith(".txt")
-        ) {
-            LowOSTextEditor.open(path);
-            return;
-        }
-
-        alert(
-            "No application is registered for this file."
-        );
-    }
-
-    function createFolder() {
-        var name =
-            prompt("Folder name:");
-
-        if (!name) {
-            return;
-        }
-
-        try {
-            LowOSFileSystem.createDirectory(
-                currentPath + "/" + name
-            );
-
-            render();
-        } catch (error) {
-            alert(error.message);
-        }
-    }
-
-    function createFile() {
-        var name =
-            prompt(
-                "File name:",
-                "newfile.txt"
-            );
-
-        if (!name) {
-            return;
-        }
-
-        try {
-            LowOSFileSystem.createFile(
-                currentPath + "/" + name,
-                ""
-            );
-
-            render();
-        } catch (error) {
-            alert(error.message);
-        }
-    }
-
-    function contextMenu(x, y, item) {
-        var old =
-            document.getElementById(
-                "lowos-context-menu"
-            );
-
-        if (old) {
-            old.remove();
-        }
-
-        var menu =
-            document.createElement("div");
-
-        menu.id =
-            "lowos-context-menu";
-
-        menu.style.left = x + "px";
-        menu.style.top = y + "px";
-
-        menu.innerHTML = `
-            <button id="ctx-open">Open</button>
-            <button id="ctx-rename">Rename</button>
-            <button id="ctx-delete">Delete</button>
-        `;
-
-        document.body.appendChild(menu);
-
-        document.getElementById(
-            "ctx-open"
-        ).onclick = function () {
-            var path =
-                currentPath +
-                "/" +
-                item.name;
-
-            if (
-                item.type ===
-                "directory"
-            ) {
-                navigate(path);
-            } else {
-                openFile(path);
+                this.currentPath = FS.normalize(path);
+                this.selectedPath = null;
             }
 
-            menu.remove();
-        };
+            openWin("files");
 
-        document.getElementById(
-            "ctx-rename"
-        ).onclick = function () {
-            var name =
-                prompt(
-                    "New name:",
-                    item.name
-                );
+            this.refresh();
+        },
 
-            if (!name) {
+        goUp() {
+            const parent = FS.parent(this.currentPath);
+
+            if (parent !== null) {
+                this.currentPath = parent;
+                this.selectedPath = null;
+                this.refresh();
+            }
+        },
+
+        refresh() {
+            const pathElement = document.getElementById("filePath");
+            const list = document.getElementById("fileList");
+
+            if (!pathElement || !list) return;
+
+            /* If the folder was deleted, climb to the nearest existing one. */
+            while (
+                this.currentPath !== "/" &&
+                (
+                    !FS.find(this.currentPath) ||
+                    FS.find(this.currentPath).type !== "directory"
+                )
+            ) {
+                this.currentPath = FS.parent(this.currentPath);
+            }
+
+            pathElement.textContent = this.currentPath;
+
+            list.textContent = "";
+
+            if (
+                this.selectedPath &&
+                !FS.exists(this.selectedPath)
+            ) {
+                this.selectedPath = null;
+            }
+
+            if (this.currentPath !== "/") {
+                const back = document.createElement("div");
+
+                back.className = "file-row";
+
+                back.innerHTML = `
+                    <span class="file-type">DIR</span>
+                    <span class="file-name">..</span>
+                    <span class="file-meta">parent</span>
+                `;
+
+                back.addEventListener("dblclick", () => this.goUp());
+
+                list.appendChild(back);
+            }
+
+            const entries = FS.listSorted(this.currentPath);
+
+            if (!entries.length) {
+                const empty = document.createElement("div");
+
+                empty.className = "file-empty";
+                empty.textContent = "Directory is empty.";
+
+                list.appendChild(empty);
+
                 return;
             }
 
-            try {
-                LowOSFileSystem.renamePath(
-                    currentPath +
-                    "/" +
-                    item.name,
-                    name
-                );
+            entries.forEach((item) => {
+                const itemPath = FS.join(this.currentPath, item.name);
 
-                render();
-            } catch (error) {
-                alert(error.message);
-            }
+                const row = document.createElement("div");
 
-            menu.remove();
-        };
+                row.className = "file-row";
+                row.dataset.path = itemPath;
 
-        document.getElementById(
-            "ctx-delete"
-        ).onclick = function () {
-            if (
-                !confirm(
-                    "Delete " +
-                    item.name +
-                    "?"
-                )
-            ) {
-                return;
-            }
+                if (itemPath === this.selectedPath) {
+                    row.classList.add("selected");
+                }
 
-            try {
-                LowOSFileSystem.deletePath(
-                    currentPath +
-                    "/" +
-                    item.name
-                );
-
-                render();
-            } catch (error) {
-                alert(error.message);
-            }
-
-            menu.remove();
-        };
-    }
-
-    function makeDraggable(element) {
-        var title =
-            element.querySelector(
-                ".lowos-titlebar"
-            );
-
-        var active = false;
-        var x = 0;
-        var y = 0;
-
-        title.addEventListener(
-            "pointerdown",
-            function (event) {
                 if (
-                    event.target.classList.contains(
-                        "lowos-close-button"
-                    )
+                    this.clipboard &&
+                    this.clipboard.mode === "cut" &&
+                    this.clipboard.path === itemPath
                 ) {
-                    return;
+                    row.classList.add("cut");
                 }
 
-                active = true;
+                const type = document.createElement("span");
+                const name = document.createElement("span");
+                const meta = document.createElement("span");
 
-                var rect =
-                    element.getBoundingClientRect();
+                type.className = "file-type";
+                name.className = "file-name";
+                meta.className = "file-meta";
 
-                x =
-                    event.clientX -
-                    rect.left;
+                type.textContent =
+                    item.type === "directory"
+                        ? "DIR"
+                        : getExtension(item.name);
 
-                y =
-                    event.clientY -
-                    rect.top;
+                name.textContent = item.name;
 
-                element.style.transform =
-                    "none";
+                meta.textContent =
+                    item.type === "directory"
+                        ? item.children.length + " item(s)"
+                        : formatSize(item.content.length) +
+                          " · " + formatDate(item.modifiedAt);
 
-                title.setPointerCapture(
-                    event.pointerId
-                );
+                row.append(type, name, meta);
+
+                row.addEventListener("click", () => {
+                    list
+                        .querySelectorAll(".file-row.selected")
+                        .forEach((el) => el.classList.remove("selected"));
+
+                    row.classList.add("selected");
+
+                    this.selectedPath = itemPath;
+                });
+
+                row.addEventListener("dblclick", () => {
+                    if (item.type === "directory") {
+                        this.currentPath = itemPath;
+                        this.selectedPath = null;
+                        this.refresh();
+                    } else {
+                        TextEditor.open(itemPath);
+                    }
+                });
+
+                list.appendChild(row);
+            });
+        },
+
+        newFile(path = this.currentPath) {
+            const name = prompt("File name:", "new-file.txt");
+
+            if (!name) return;
+
+            try {
+                FS.create(FS.join(path, name.trim()), "file", "");
+                sync(this);
+            } catch (error) {
+                notify(error.message, "error");
             }
-        );
+        },
 
-        title.addEventListener(
-            "pointermove",
-            function (event) {
-                if (!active) {
-                    return;
+        newFolder(path = this.currentPath) {
+            const name = prompt("Folder name:", "new-folder");
+
+            if (!name) return;
+
+            try {
+                FS.create(FS.join(path, name.trim()), "directory");
+                sync(this);
+            } catch (error) {
+                notify(error.message, "error");
+            }
+        },
+
+        renameSelected() {
+            if (!this.selectedPath) {
+                notify("Select a file or folder first.");
+                return;
+            }
+
+            const oldName = FS.name(this.selectedPath);
+            const newName = prompt("New name:", oldName);
+
+            if (!newName || newName === oldName) return;
+
+            try {
+                FS.rename(this.selectedPath, newName);
+                this.selectedPath = null;
+                sync(this);
+            } catch (error) {
+                notify(error.message, "error");
+            }
+        },
+
+        deleteSelected() {
+            if (!this.selectedPath) {
+                notify("Select a file or folder first.");
+                return;
+            }
+
+            const name = FS.name(this.selectedPath);
+
+            if (!confirm(`Move "${name}" to Trash?`)) return;
+
+            try {
+                FS.remove(this.selectedPath);
+                this.selectedPath = null;
+                sync(this);
+                notify(`Moved "${name}" to Trash.`);
+            } catch (error) {
+                notify(error.message, "error");
+            }
+        },
+
+        copySelected() {
+            if (!this.selectedPath) {
+                notify("Select a file or folder first.");
+                return;
+            }
+
+            this.clipboard = { path: this.selectedPath, mode: "copy" };
+            notify(`Copied "${FS.name(this.selectedPath)}".`);
+            this.refresh();
+        },
+
+        cutSelected() {
+            if (!this.selectedPath) {
+                notify("Select a file or folder first.");
+                return;
+            }
+
+            if (FS.isProtected(this.selectedPath)) {
+                notify("Protected system directory.", "error");
+                return;
+            }
+
+            this.clipboard = { path: this.selectedPath, mode: "cut" };
+            notify(`Cut "${FS.name(this.selectedPath)}".`);
+            this.refresh();
+        },
+
+        paste() {
+            if (!this.clipboard) {
+                notify("Clipboard is empty.");
+                return;
+            }
+
+            const { path, mode } = this.clipboard;
+
+            if (!FS.exists(path)) {
+                this.clipboard = null;
+                notify("The copied item no longer exists.", "error");
+                return;
+            }
+
+            try {
+                const name = FS.name(path);
+
+                if (mode === "cut") {
+                    if (FS.parent(path) === this.currentPath) {
+                        notify("Item is already in this folder.");
+                        return;
+                    }
+
+                    FS.move(
+                        path,
+                        FS.join(
+                            this.currentPath,
+                            FS.uniqueName(this.currentPath, name)
+                        )
+                    );
+
+                    this.clipboard = null;
+                } else {
+                    FS.copy(
+                        path,
+                        FS.join(
+                            this.currentPath,
+                            FS.uniqueName(this.currentPath, name)
+                        )
+                    );
                 }
 
-                element.style.left =
-                    event.clientX -
-                    x +
-                    "px";
-
-                element.style.top =
-                    event.clientY -
-                    y +
-                    "px";
+                sync(this);
+            } catch (error) {
+                notify(error.message, "error");
             }
-        );
+        }
+    };
 
-        title.addEventListener(
-            "pointerup",
-            function () {
-                active = false;
-            }
-        );
+    /* ---------- helpers ---------- */
+
+    function sync(manager) {
+        if (typeof refreshLowOS === "function") {
+            refreshLowOS();
+        } else {
+            manager.refresh();
+        }
     }
 
-    window.LowOSFileManager = {
-        open: open
-    };
+    function notify(message, kind) {
+        if (typeof window.toast === "function") {
+            window.toast(message, kind);
+        } else {
+            alert(message);
+        }
+    }
+
+    function getExtension(name) {
+        if (!name.includes(".") || name.endsWith(".")) {
+            return "FILE";
+        }
+
+        return name.split(".").pop().toUpperCase().slice(0, 6);
+    }
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+
+        return (bytes / 1024).toFixed(1) + " KB";
+    }
+
+    function formatDate(timestamp) {
+        return new Date(timestamp)
+            .toISOString()
+            .slice(0, 16)
+            .replace("T", " ");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const on = (id, handler) => {
+            const element = document.getElementById(id);
+
+            if (element) element.addEventListener("click", handler);
+        };
+
+        on("fileBack", () => FileManager.goUp());
+        on("newFile", () => FileManager.newFile());
+        on("newFolder", () => FileManager.newFolder());
+        on("fileRename", () => FileManager.renameSelected());
+        on("fileDelete", () => FileManager.deleteSelected());
+        on("fileCopy", () => FileManager.copySelected());
+        on("fileCut", () => FileManager.cutSelected());
+        on("filePaste", () => FileManager.paste());
+        on("fileRefresh", () => FileManager.refresh());
+    });
+
+    window.FileManager = FileManager;
+
 })();

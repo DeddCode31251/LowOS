@@ -1,326 +1,157 @@
 (function () {
     "use strict";
 
-    var history = [];
-    var historyIndex = -1;
+    const $ = (id) => document.getElementById(id);
 
-    function open() {
-        var existing =
-            document.getElementById(
-                "lowos-browser"
-            );
+    const HOME_URL = "https://example.com";
 
-        if (existing) {
-            return;
-        }
+    const BrowserApp = {
 
-        var win =
-            document.createElement("div");
+        history: [],
 
-        win.id = "lowos-browser";
-        win.className =
-            "lowos-app-window browser-window";
+        position: -1,
 
-        win.style.left = "50%";
-        win.style.top = "50%";
-        win.style.transform =
-            "translate(-50%, -50%)";
+        loaded: false,
 
-        win.innerHTML = `
-            <div class="lowos-titlebar">
-                <span>Web Browser</span>
+        open() {
+            openWin("browser");
 
-                <button class="lowos-close-button">
-                    x
-                </button>
-            </div>
-
-            <div class="browser-toolbar">
-
-                <button id="browser-back">
-                    Back
-                </button>
-
-                <button id="browser-forward">
-                    Forward
-                </button>
-
-                <button id="browser-reload">
-                    Reload
-                </button>
-
-                <input
-                    id="browser-address"
-                    placeholder="Enter URL or search"
-                >
-
-                <button id="browser-go">
-                    Go
-                </button>
-
-            </div>
-
-            <div class="browser-frame-container">
-
-                <div
-                    id="browser-home"
-                    class="browser-home"
-                >
-                    <h1>2BytesOS Browser</h1>
-                    <p>
-                        Enter a URL or search query.
-                    </p>
-                </div>
-
-                <iframe
-                    id="browser-frame"
-                    style="display:none"
-                    sandbox="
-                        allow-forms
-                        allow-modals
-                        allow-popups
-                        allow-presentation
-                        allow-same-origin
-                        allow-scripts
-                    "
-                ></iframe>
-
-            </div>
-        `;
-
-        document.body.appendChild(win);
-
-        win.querySelector(
-            ".lowos-close-button"
-        ).onclick = function () {
-            win.remove();
-        };
-
-        var address =
-            win.querySelector(
-                "#browser-address"
-            );
-
-        win.querySelector(
-            "#browser-go"
-        ).onclick = function () {
-            navigate(address.value);
-        };
-
-        address.addEventListener(
-            "keydown",
-            function (event) {
-                if (event.key === "Enter") {
-                    navigate(address.value);
-                }
+            /* The iframe stays blank until the browser is first opened,
+               so startup never waits on the network. */
+            if (!this.loaded) {
+                this.loaded = true;
+                this.go();
             }
-        );
 
-        win.querySelector(
-            "#browser-back"
-        ).onclick = back;
+            const input = $("browserAddress");
 
-        win.querySelector(
-            "#browser-forward"
-        ).onclick = forward;
-
-        win.querySelector(
-            "#browser-reload"
-        ).onclick = reload;
-
-        makeDraggable(win);
-    }
-
-    function makeUrl(input) {
-        input = input.trim();
-
-        if (!input) {
-            return null;
-        }
-
-        if (
-            input.startsWith("http://") ||
-            input.startsWith("https://")
-        ) {
-            return input;
-        }
-
-        if (
-            input.includes(".") &&
-            !input.includes(" ")
-        ) {
-            return "https://" + input;
-        }
-
-        return (
-            "https://www.google.com/search?q=" +
-            encodeURIComponent(input)
-        );
-    }
-
-    function navigate(input, saveHistory) {
-        var url = makeUrl(input);
-
-        if (!url) {
-            return;
-        }
-
-        var win =
-            document.getElementById(
-                "lowos-browser"
-            );
-
-        if (!win) {
-            return;
-        }
-
-        var frame =
-            win.querySelector(
-                "#browser-frame"
-            );
-
-        var home =
-            win.querySelector(
-                "#browser-home"
-            );
-
-        var address =
-            win.querySelector(
-                "#browser-address"
-            );
-
-        address.value = url;
-
-        home.style.display = "none";
-        frame.style.display = "block";
-
-        frame.src = url;
-
-        if (saveHistory !== false) {
-            history =
-                history.slice(
-                    0,
-                    historyIndex + 1
-                );
-
-            history.push(url);
-
-            historyIndex =
-                history.length - 1;
-        }
-    }
-
-    function back() {
-        if (historyIndex <= 0) {
-            return;
-        }
-
-        historyIndex--;
-
-        navigate(
-            history[historyIndex],
-            false
-        );
-    }
-
-    function forward() {
-        if (
-            historyIndex >=
-            history.length - 1
-        ) {
-            return;
-        }
-
-        historyIndex++;
-
-        navigate(
-            history[historyIndex],
-            false
-        );
-    }
-
-    function reload() {
-        var frame =
-            document.getElementById(
-                "browser-frame"
-            );
-
-        if (frame) {
-            frame.src = frame.src;
-        }
-    }
-
-    function makeDraggable(element) {
-        var title =
-            element.querySelector(
-                ".lowos-titlebar"
-            );
-
-        var active = false;
-        var x = 0;
-        var y = 0;
-
-        title.addEventListener(
-            "pointerdown",
-            function (event) {
-                if (
-                    event.target.classList.contains(
-                        "lowos-close-button"
-                    )
-                ) {
-                    return;
-                }
-
-                active = true;
-
-                var rect =
-                    element.getBoundingClientRect();
-
-                x =
-                    event.clientX -
-                    rect.left;
-
-                y =
-                    event.clientY -
-                    rect.top;
-
-                element.style.transform =
-                    "none";
-
-                title.setPointerCapture(
-                    event.pointerId
-                );
+            if (input) {
+                setTimeout(() => input.select(), 50);
             }
-        );
+        },
 
-        title.addEventListener(
-            "pointermove",
-            function (event) {
-                if (!active) {
-                    return;
-                }
+        normalize(url) {
+            url = String(url).trim();
 
-                element.style.left =
-                    event.clientX -
-                    x +
-                    "px";
+            if (!url) return HOME_URL;
 
-                element.style.top =
-                    event.clientY -
-                    y +
-                    "px";
+            if (url === "about:blank") return url;
+
+            if (/^https?:\/\//i.test(url)) return url;
+
+            if (/^(localhost|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/.*)?$/i.test(url)) {
+                return "http://" + url;
             }
-        );
 
-        title.addEventListener(
-            "pointerup",
-            function () {
-                active = false;
+            if (url.includes(".") && !/\s/.test(url)) {
+                return "https://" + url;
             }
-        );
-    }
 
-    window.LowOSBrowser = {
-        open: open
+            return (
+                "https://www.google.com/search?igu=1&q=" +
+                encodeURIComponent(url)
+            );
+        },
+
+        go(addHistory = true) {
+            const input = $("browserAddress");
+            const frame = $("browserFrame");
+
+            if (!input || !frame) return;
+
+            const url = this.normalize(input.value);
+
+            input.value = url;
+            frame.src = url;
+
+            if (addHistory && this.history[this.position] !== url) {
+                this.history = this.history.slice(0, this.position + 1);
+                this.history.push(url);
+                this.position = this.history.length - 1;
+            }
+
+            this.updateButtons();
+        },
+
+        back() {
+            if (this.position <= 0) return;
+
+            this.position--;
+            this.loadHistoryURL(this.history[this.position]);
+        },
+
+        forward() {
+            if (this.position >= this.history.length - 1) return;
+
+            this.position++;
+            this.loadHistoryURL(this.history[this.position]);
+        },
+
+        loadHistoryURL(url) {
+            $("browserAddress").value = url;
+            $("browserFrame").src = url;
+
+            this.updateButtons();
+        },
+
+        reload() {
+            const frame = $("browserFrame");
+
+            if (!frame || !this.loaded) return;
+
+            /* frame.src = frame.src fails to reload if the page navigated
+               itself, so reassign from our own record. */
+            const url = this.history[this.position];
+
+            if (url) {
+                frame.src = "about:blank";
+                setTimeout(() => { frame.src = url; }, 30);
+            }
+        },
+
+        external() {
+            const input = $("browserAddress");
+
+            window.open(
+                this.normalize(input.value),
+                "_blank",
+                "noopener"
+            );
+        },
+
+        updateButtons() {
+            const back = $("browserBack");
+            const forward = $("browserForward");
+
+            if (back) back.disabled = this.position <= 0;
+
+            if (forward) {
+                forward.disabled =
+                    this.position >= this.history.length - 1;
+            }
+        }
     };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const on = (id, event, handler) => {
+            const element = $(id);
+
+            if (element) element.addEventListener(event, handler);
+        };
+
+        on("browserGo", "click", () => BrowserApp.go());
+        on("browserBack", "click", () => BrowserApp.back());
+        on("browserForward", "click", () => BrowserApp.forward());
+        on("browserReload", "click", () => BrowserApp.reload());
+        on("browserExternal", "click", () => BrowserApp.external());
+
+        on("browserAddress", "keydown", (event) => {
+            if (event.key === "Enter") BrowserApp.go();
+        });
+
+        BrowserApp.updateButtons();
+    });
+
+    window.BrowserApp = BrowserApp;
+
 })();
