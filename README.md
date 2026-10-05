@@ -18,6 +18,18 @@ Simple OS Simulator using HTML CSS JS, That simulate a real os.
 
 - projects.c
 -- its some projects that i made on github.
+
+- files
+-- File System
+
+- editor
+-- Text Editor
+
+- Calculator
+-- calculator
+
+- Browser
+-- Browser
   
 # Author 
 
