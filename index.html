@@ -1,81 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LowOS - Mark Richard</title>
-<meta name="description" content="Mark Richard's personal web OS, built with HTML, CSS and JavaScript.">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
+    <title>LowOS</title>
+    <meta
+        name="description"
+        content="LowOS - a web-based operating system simulator."
+    >
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div id="boot"><h2 class="a">LowOS</h2><pre id="bootText"></pre><div id="bar"><div id="fill"></div></div><p id="pct" class="c">0%</p><p class="c">tap anywhere to skip</p></div>
 
-<div id="top">
-  <button class="a" id="menu" style="background:none;border:0;cursor:pointer;font-weight:700;color:var(--amber)">LowOS</button>
-  <span id="regs">AX=0 BX=0 CX=0 PC=0</span>
-  <span id="clock"></span>
+<div id="boot">
+    <h2>LowOS</h2>
+
+    <pre id="bootText"></pre>
+
+    <div id="bar">
+        <div id="fill"></div>
+    </div>
+
+    <p id="pct">0%</p>
+    <p>click anywhere to skip</p>
 </div>
 
-<div id="desk">
-  <button class="ico" data-open="welcome"><svg viewBox="0 0 44 44" fill="none" stroke="#ffb000" stroke-width="2"><rect x="6" y="5" width="32" height="34" rx="3"/><path d="M12 14h20M12 21h14M12 28h18"/></svg><span>readme.asm</span></button>
-  <button class="ico" data-open="term"><svg viewBox="0 0 44 44" fill="none" stroke="#5fd7e6" stroke-width="2"><rect x="4" y="7" width="36" height="30" rx="3"/><path d="M11 17l6 5-6 5M21 28h10"/></svg><span>shell</span></button>
-  <button class="ico" data-open="lab"><svg viewBox="0 0 44 44" fill="none" stroke="#a8e6a1" stroke-width="2"><rect x="11" y="11" width="22" height="22" rx="2"/><path d="M17 5v6M27 5v6M17 33v6M27 33v6M5 17h6M5 27h6M33 17h6M33 27h6"/></svg><span>cpu.lab</span></button>
-  <button class="ico" data-open="proj"><svg viewBox="0 0 44 44" fill="none" stroke="#ff6159" stroke-width="2"><path d="M15 12l-9 10 9 10M29 12l9 10-9 10M25 8l-6 28"/></svg><span>projects.c</span></button>
-</div>
+<header id="top">
+    <button id="menu">LowOS</button>
 
-<div class="win" id="welcome" style="top:70px;left:60px">
-  <div class="wh"><i data-close></i><p>readme.asm</p></div>
-  <div class="wb">
-    <h1>Hello, I'm Mark Richard.</h1>
-    <p>This is my personal OS. Every window below the desktop is a small program I wrote in plain HTML, CSS and JavaScript, with a tiny CPU you can program yourself.</p>
-    <pre><span class="c">; who am I</span>
+    <span id="regs">
+        AX=0 BX=0 CX=0 DX=0 PC=0 ZF=0
+    </span>
+
+    <span id="clock"></span>
+</header>
+
+<main id="desk">
+
+    <button class="ico" data-open="welcome">
+        <div class="icon-symbol">ASM</div>
+        <span>readme.asm</span>
+    </button>
+
+    <button class="ico" data-open="term">
+        <div class="icon-symbol terminal-icon">&gt;_</div>
+        <span>shell</span>
+    </button>
+
+    <button class="ico" data-open="lab">
+        <div class="icon-symbol cpu-icon">CPU</div>
+        <span>cpu.lab</span>
+    </button>
+
+    <button class="ico" data-open="proj">
+        <div class="icon-symbol code-icon">&lt;/&gt;</div>
+        <span>projects</span>
+    </button>
+
+    <button class="ico" onclick="openFileManager()">
+        <div class="icon-symbol folder-icon">DIR</div>
+        <span>files</span>
+    </button>
+
+    <button class="ico" onclick="openTextEditor()">
+        <div class="icon-symbol editor-icon">TXT</div>
+        <span>editor</span>
+    </button>
+
+    <button class="ico" onclick="openCalculator()">
+        <div class="icon-symbol calc-icon">123</div>
+        <span>calculator</span>
+    </button>
+
+    <button class="ico" onclick="openBrowser()">
+        <div class="icon-symbol browser-icon">WEB</div>
+        <span>browser</span>
+    </button>
+
+</main>
+
+<section class="win" id="welcome" style="top:70px;left:60px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>readme.asm</p>
+    </div>
+
+    <div class="wb">
+
+        <h1>Welcome to LowOS</h1>
+
+        <p>
+            LowOS is a browser-based operating system simulator
+            built with HTML, CSS and JavaScript.
+        </p>
+
+        <pre><span class="c">; LowOS</span>
 <span class="k">section</span> .data
-  name   <span class="k">db</span> <span class="s">"Mark Richard"</span>
-  role   <span class="k">db</span> <span class="s">"student developer"</span>
-  loves  <span class="k">db</span> <span class="s">"hardware, low-level code, tea"</span></pre>
-    <div class="row"><button class="btn" data-open="lab">Run some assembly</button><button class="btn g" data-open="term">Open shell</button></div>
-    <p class="c">Tip: drag windows by their title bar. On phones, tap an icon to open it.</p>
-  </div>
-</div>
 
-<div class="win" id="term" style="top:110px;left:120px">
-  <div class="wh"><i data-close></i><p>shell</p></div>
-  <div class="wb">
-    <div id="termOut" aria-live="polite"></div>
-    <label><span class="pr">user@lowos:~$</span> <input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command"></label>
-  </div>
-</div>
+    name   <span class="k">db</span> <span class="s">"LowOS"</span>
+    type   <span class="k">db</span> <span class="s">"web operating system"</span>
+    stack  <span class="k">db</span> <span class="s">"HTML CSS JavaScript"</span></pre>
 
-<div class="win" id="lab" style="top:90px;left:160px">
-  <div class="wh"><i data-close></i><p>cpu.lab</p></div>
-  <div class="wb">
-    <p class="c">A 4-register toy CPU. Ops: MOV ADD SUB MUL INC DEC CMP JNZ OUT HLT. Labels end with a colon.</p>
-    <textarea id="src" spellcheck="false" aria-label="Assembly source">; sum 1..5 into AX
-  MOV AX, 0
-  MOV CX, 5
+        <div class="row">
+            <button class="btn" data-open="lab">
+                Run CPU Lab
+            </button>
+
+            <button class="btn g" data-open="term">
+                Open Shell
+            </button>
+
+            <button class="btn g" onclick="openFileManager()">
+                Open Files
+            </button>
+        </div>
+
+        <p class="c">
+            Drag windows by their title bar.
+        </p>
+
+    </div>
+
+</section>
+
+<section class="win" id="term" style="top:110px;left:120px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>shell</p>
+    </div>
+
+    <div class="wb">
+
+        <div id="termOut"></div>
+
+        <label class="terminal-input">
+            <span class="pr">user@2bytes:~$</span>
+
+            <input
+                id="termIn"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-label="Command"
+            >
+        </label>
+
+    </div>
+
+</section>
+
+<section class="win" id="lab" style="top:90px;left:160px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>cpu.lab</p>
+    </div>
+
+    <div class="wb">
+
+        <p class="c">
+            4-register toy CPU.
+            Ops: MOV ADD SUB MUL INC DEC CMP JNZ OUT HLT.
+        </p>
+
+        <textarea
+            id="src"
+            spellcheck="false"
+            aria-label="Assembly source"
+        >; sum 1..5 into AX
+MOV AX, 0
+MOV CX, 5
 loop:
-  ADD AX, CX
-  DEC CX
-  JNZ loop
-  OUT AX
-  HLT</textarea>
-    <div class="row"><button class="btn" id="run">Run</button><button class="btn g" id="reset">Reset</button></div>
-    <pre id="cpuOut" class="s"></pre>
-  </div>
-</div>
+ADD AX, CX
+DEC CX
+JNZ loop
+OUT AX
+HLT</textarea>
 
-<div class="win" id="proj" style="top:130px;left:200px">
-  <div class="wh"><i data-close></i><p>projects.c</p></div>
-  <div class="wb">
-    <pre><span class="k">typedef struct</span> { <span class="k">char</span> *name; <span class="k">char</span> *stack; } Project;</pre>
-    <br>
-    <div class="proj"><b class="a">Project One</b><br>Created an actual OS named DeadIV OS<br><span class="c">stack: C, Assembly</span></div>
-    <div class="proj"><b class="a">Project Two</b><br>Made a Slack Bot for StarDance Summer Competition<br><span class="c">stack: HTML, CSS, JS</span></div>
-    <div class="proj"><b class="a">Project Three</b><br>Created a hashing algorthim called DEADHASH<br><span class="c">C</span></div>
-    <p><a class="k" href="https://github.com/DeddCode31251/" target="_blank" rel="noopener">GitHub</a></p>
-  </div>
-</div>
+        <div class="row">
+            <button class="btn" id="run">
+                Run
+            </button>
 
+            <button class="btn g" id="reset">
+                Reset
+            </button>
+        </div>
+
+        <pre id="cpuOut" class="s"></pre>
+
+    </div>
+
+</section>
+
+<section class="win" id="proj" style="top:130px;left:200px">
+
+    <div class="wh">
+        <i data-close></i>
+        <p>projects</p>
+    </div>
+
+    <div class="wb">
+
+        <pre><span class="k">typedef struct</span> {
+    <span class="k">char</span> *name;
+    <span class="k">char</span> *stack;
+} Project;</pre>
+
+        <br>
+
+        <div class="proj">
+            <b class="a">DeadIV OS</b>
+            <br>
+            A low-level operating system project.
+            <br>
+            <span class="c">C, Assembly</span>
+        </div>
+
+        <div class="proj">
+            <b class="a">Slack Bot</b>
+            <br>
+            A Slack bot project.
+            <br>
+            <span class="c">HTML, CSS, JavaScript</span>
+        </div>
+
+        <div class="proj">
+            <b class="a">DEADHASH</b>
+            <br>
+            A hashing algorithm project.
+            <br>
+            <span class="c">C</span>
+        </div>
+
+        <p>
+            <a
+                class="k"
+                href="https://github.com/DeddCode31251/"
+                target="_blank"
+                rel="noopener"
+            >
+                GitHub
+            </a>
+        </p>
+
+    </div>
+
+</section>
+
+<script src="scripts/filesystem.js"></script>
+<script src="scripts/texteditor.js"></script>
+<script src="scripts/filemanager.js"></script>
+<script src="scripts/calculator.js"></script>
+<script src="scripts/browser.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
